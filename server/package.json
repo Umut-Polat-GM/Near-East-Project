@@ -1,0 +1,14 @@
+{
+    "name": "near-east",
+    "version": "1.0.0",
+    "description": "Near east university project.",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.19.2"
+    }
+}
