@@ -1,40 +1,39 @@
-import { Box, Button, Checkbox, Container, CssBaseline } from "@mui/material";
-import { FormControlLabel, Grid, TextField, InputAdornment, IconButton } from "@mui/material";
+import { Box, Button, Container, CssBaseline } from "@mui/material";
+import { Grid, TextField, InputAdornment, IconButton } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { AccountCircle } from "@mui/icons-material";
+import BadgeIcon from "@mui/icons-material/Badge";
 import HttpsIcon from "@mui/icons-material/Https";
 import CircularProgress from "@mui/material/CircularProgress";
-import LoginIcon from "@mui/icons-material/Login";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-// import Lottie from "lottie-react";
-// import animationData from "../assets/json/LottieLogin.json";
-// import { theme } from "../theme";
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import propTypes from "prop-types";
 import { useDispatch } from "react-redux";
 import logo from "../assets/images/images.jpeg";
 import bgImage from "../assets/images/bgImage.jpg";
 import { showNotification } from "../store/notifications/notificationSlice";
-import { login } from "../store/user/userSlice";
-import Cookies from "js-cookie";
-import { postUserLogin } from "../services/Requests";
+import { postUserRegister } from "../services/Requests";
 
 // With yup library, we can define a schema for form validation.
 const schema = yup.object({
-    email: yup.string().email(""),
-    password: yup.string().required("Şifre gerekli*"),
+    username: yup.string(),
+    email: yup
+        .string()
+        .matches(/@std.neu.edu.tr$/, "Email must be @std.neu.edu.tr")
+        .required("Email required*"),
+    password: yup.string().required("Password required*"),
 });
 
-export default function Login() {
+export default function Register() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [visible, setVisible] = useState(false);
     const [progress, setProgress] = useState(false);
-    const [isRemember, setIsRemember] = useState(true);
 
     const {
         register,
@@ -42,34 +41,22 @@ export default function Login() {
         formState: { errors },
     } = useForm({
         resolver: yupResolver(schema),
-        defaultValues: {
-            email: Cookies.get("email") || "",
-            password: Cookies.get("password") || "",
-        },
     });
 
     const onSubmit = async (data) => {
         // console.log("data:", data);
         try {
             setProgress(true);
-            const response = await postUserLogin(data);
+            const response = await postUserRegister(data);
             const result = await response.json();
-            // console.log("response", response);
-            // console.log("result", result);
             if (response.ok) {
-                dispatch(login(result.user));
-                localStorage.setItem("token", result.token);
-                sessionStorage.setItem("isPageOpened", "true");
-                setProgress(false);
-                navigate("/");
-                if (isRemember) {
-                    Cookies.set("email", data.email, { expires: 7 });
-                    Cookies.set("password", data.password, { expires: 7 });
-                } else {
-                    Cookies.remove("email");
-                    Cookies.remove("password");
-                }
-                dispatch(showNotification({ type: "success", message: `${result.msg}` }));
+                navigate("/login");
+                dispatch(
+                    showNotification({
+                        type: "success",
+                        message: `User ${result.user.username} registered successfully`,
+                    })
+                );
             } else {
                 dispatch(showNotification({ type: "error", message: result.msg }));
             }
@@ -129,29 +116,34 @@ export default function Login() {
                             alt="logo"
                             style={{ width: "160px", height: "160px", marginBottom: "1rem" }}
                         />
-                        {/* <Lottie
-                            animationData={animationData}
-                            style={{ width: "160px", height: "160px" }}
-                            aria-labelledby="use lottie animation"
-                            loop={false}
-                            autoplay={true}
-                        /> */}
-                        {/* <Typography
-                            component="h1"
-                            variant="h5"
-                            sx={{
-                                color: `${theme.palette.secondary.light}`,
-                                fontWeight: "bold",
-                            }}
-                        >
-                            Giriş
-                        </Typography> */}
                         <Box
                             component="form"
                             onSubmit={handleSubmit(onSubmit)}
                             noValidate
                             sx={{ mt: 1 }}
                         >
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                variant="outlined"
+                                id="username"
+                                name="username"
+                                label="Username"
+                                autoComplete="username"
+                                autoFocus
+                                color="secondary"
+                                {...register("username")}
+                                error={!!errors.username}
+                                helperText={errors?.username?.message}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <BadgeIcon color="secondary" />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
                             <TextField
                                 margin="normal"
                                 required
@@ -201,28 +193,6 @@ export default function Login() {
                                     ),
                                 }}
                             />
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    width: "98%",
-                                    margin: "0 auto",
-                                }}
-                            >
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={isRemember}
-                                            onChange={(e) => setIsRemember(e.target.checked)}
-                                            color="secondary"
-                                            size="small"
-                                        />
-                                    }
-                                    label="Remember me"
-                                />
-                                <NavLink to="/register">Register</NavLink>
-                            </Box>
                             <Button
                                 type="submit"
                                 fullWidth
@@ -233,11 +203,11 @@ export default function Login() {
                                     progress ? (
                                         <CircularProgress color="inherit" size={"16px"} />
                                     ) : (
-                                        <LoginIcon />
+                                        <HowToRegIcon />
                                     )
                                 }
                             >
-                                Login
+                                Register
                             </Button>
                         </Box>
                     </Box>
@@ -247,7 +217,7 @@ export default function Login() {
     );
 }
 
-Login.propTypes = {
+Register.propTypes = {
     visible: propTypes.bool,
     setVisible: propTypes.func,
 };

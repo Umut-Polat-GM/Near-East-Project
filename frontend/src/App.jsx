@@ -4,6 +4,7 @@ import Notifications from "./components/Notifications";
 import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import { useSelector } from "react-redux";
+import Register from "./pages/Register";
 
 const App = () => {
     const userInfo = useSelector((state) => state.user.user);
@@ -14,6 +15,7 @@ const App = () => {
             <Routes>
                 <Route path="/" element={userInfo ? <Home /> : <Navigate to="/login" />} />
                 <Route path="/login" element={userInfo ? <Navigate to="/" /> : <Login />} />
+                <Route path="/register" element={<Register />} />
             </Routes>
         </Box>
     );
