@@ -12,6 +12,7 @@ import * as yup from "yup";
 import { hideModal } from "../store/modal/modalSlice";
 import { patchPost, postUserPost } from "../services/Requests";
 import { showNotification } from "../store/notifications/notificationSlice";
+import { fetchPosts } from "../services/fetchFunctions";
 
 const modalStyle = {
     position: "absolute",
@@ -95,6 +96,7 @@ const TweetModal = () => {
             setProgress(false);
             dispatch(hideModal());
             reset();
+            fetchPosts(dispatch);
         }
     };
 

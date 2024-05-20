@@ -9,38 +9,21 @@ import {
     Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { delPost, getUserPosts, postLikePost, postUnlikePost, postUserPost } from "../services/Requests";
+import { delPost, postLikePost, postUnlikePost, postUserPost } from "../services/Requests";
 import { showNotification } from "../store/notifications/notificationSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import PostCard from "./PostCard";
+import { fetchPosts } from "../services/fetchFunctions";
 
 const MainSection = () => {
     const dispatch = useDispatch();
     const [tweetDescription, setTweetDescription] = useState("");
-    const [posts, setPosts] = useState([]);
     const [progress, setProgress] = useState(false);
 
-    const getAllPosts = async () => {
-        try {
-            const response = await getUserPosts();
-            const result = await response.json();
-            if (response.ok) {
-                setPosts(result.posts);
-            } else {
-                dispatch(
-                    showNotification({
-                        message: `${result.msg}`,
-                        type: "warning",
-                    })
-                );
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    const { posts } = useSelector((state) => state.service);
 
     useEffect(() => {
-        getAllPosts();
+        fetchPosts(dispatch);
     }, []);
 
     const onTweetSubmit = async () => {
@@ -63,7 +46,7 @@ const MainSection = () => {
                     })
                 );
             }
-            getAllPosts();
+            fetchPosts(dispatch);
         } catch (error) {
             console.error(error);
             dispatch(
@@ -105,7 +88,7 @@ const MainSection = () => {
                     })
                 );
             }
-            getAllPosts();
+            fetchPosts(dispatch);
         } catch (error) {
             console.error(error);
             dispatch(
@@ -136,7 +119,7 @@ const MainSection = () => {
                     })
                 );
             }
-            getAllPosts();
+            fetchPosts(dispatch);
         } catch (error) {
             console.error(error);
             dispatch(
@@ -167,7 +150,7 @@ const MainSection = () => {
                     })
                 );
             }
-            getAllPosts();
+            fetchPosts(dispatch);
         } catch (error) {
             console.error(error);
             dispatch(
