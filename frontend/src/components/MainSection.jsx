@@ -9,7 +9,7 @@ import {
     Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { getUserPosts, postLikePost, postUnlikePost, postUserPost } from "../services/Requests";
+import { delPost, getUserPosts, postLikePost, postUnlikePost, postUserPost } from "../services/Requests";
 import { showNotification } from "../store/notifications/notificationSlice";
 import { useDispatch } from "react-redux";
 import PostCard from "./PostCard";
@@ -148,6 +148,37 @@ const MainSection = () => {
         }
     };
 
+    const delSinglePost = async (postId) => {
+        try {
+            const response = await delPost(postId);
+            const result = await response.json();
+            if (response.ok) {
+                dispatch(
+                    showNotification({
+                        message: "Post Deleted Successfully!",
+                        type: "success",
+                    })
+                );
+            } else {
+                dispatch(
+                    showNotification({
+                        message: `${result.msg}`,
+                        type: "warning",
+                    })
+                );
+            }
+            getAllPosts();
+        } catch (error) {
+            console.error(error);
+            dispatch(
+                showNotification({
+                    message: "Something went wrong!",
+                    type: "error",
+                })
+            );
+        }
+    };
+
     return (
         <section
             style={{
@@ -225,6 +256,7 @@ const MainSection = () => {
                     post={post}
                     onLikePost={onLikePost}
                     onUnLikePost={onUnLikePost}
+                    delSinglePost={delSinglePost}
                     timeFormatter={timeFormatter}
                 />
             ))}

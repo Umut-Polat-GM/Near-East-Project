@@ -7,10 +7,10 @@ import Backdrop from "@mui/material/Backdrop";
 import { useForm } from "react-hook-form";
 import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as yup from "yup";
 import { hideModal } from "../store/modal/modalSlice";
-import { postUserPost } from "../services/Requests";
+import { patchPost, postUserPost } from "../services/Requests";
 import { showNotification } from "../store/notifications/notificationSlice";
 
 const modalStyle = {
@@ -46,7 +46,7 @@ const createNoteSchema = yup.object({
 const TweetModal = () => {
     const dispatch = useDispatch();
     const [progress, setProgress] = useState(false);
-    const open = useSelector((state) => state.modal.open);
+    const { type, updateShema } = useSelector((state) => state.modal);
     const {
         register,
         handleSubmit,
@@ -59,14 +59,19 @@ const TweetModal = () => {
     const onSubmit = async (data) => {
         try {
             setProgress(true);
-            const response = await postUserPost(data);
+            let response;
+            if (updateShema) {
+                response = await patchPost({ ...updateShema, ...data });
+            } else {
+                response = await postUserPost(data);
+            }
             const result = await response.json();
-            // console.log("response", response);
-            // console.log("result", result);
             if (response.ok) {
                 dispatch(
                     showNotification({
-                        message: "Tweet Shared Successfully!",
+                        message: updateShema
+                            ? "Tweet Updated Successfully!"
+                            : "Tweet Shared Successfully!",
                         type: "success",
                     })
                 );
@@ -93,12 +98,22 @@ const TweetModal = () => {
         }
     };
 
+    useEffect(() => {
+        if (type === "TweetModal" && updateShema !== null) {
+            reset({
+                title: updateShema?.title,
+                description: updateShema?.description,
+                url: updateShema?.url,
+            });
+        }
+    }, [type, updateShema, reset]);
+
     return (
         <Box>
             <Modal
                 aria-labelledby="create-notes-modal-title"
                 aria-describedby="create-notes-modal-description"
-                open={open}
+                open={type === "TweetModal"}
                 closeAfterTransition
                 slots={{ backdrop: Backdrop }}
                 slotProps={{
@@ -107,7 +122,7 @@ const TweetModal = () => {
                     },
                 }}
             >
-                <Fade in={open}>
+                <Fade in={type === "TweetModal"}>
                     <Box sx={modalStyle} width={"50%"}>
                         <Box className="flex justify-between items-center">
                             <Typography
@@ -116,7 +131,7 @@ const TweetModal = () => {
                                 component="h2"
                                 color={"secondary"}
                             >
-                                Tweet Ekle
+                                {updateShema ? "Tweet Güncelle" : "Tweet Ekle"}
                             </Typography>
                             <IconButton
                                 aria-label="exit"
@@ -189,7 +204,13 @@ const TweetModal = () => {
                                 type="submit"
                                 disabled={progress}
                             >
-                                {progress ? "Ekleme İşlemi Devam Ediyor..." : "Tweet Ekle"}
+                                {progress
+                                    ? updateShema
+                                        ? "Updating..."
+                                        : "Addition Process Continues..."
+                                    : updateShema
+                                    ? "Update Tweet"
+                                    : "Add Tweet"}
                             </button>
                         </Box>
                     </Box>
