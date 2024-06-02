@@ -1,12 +1,36 @@
+const path = require("path");
+const fs = require("fs");
 const Post = require("../models/Post");
 const { StatusCodes } = require("http-status-codes");
 const { BadRequestError, UnauthenticatedError, NotFoundError } = require("../errors");
 
 // Create new post
 const createPost = async (req, res) => {
-    req.body.createdBy = req.user.userId;
-    const post = await Post.create({ ...req.body });
-    res.status(StatusCodes.CREATED).json({ post });
+    try {
+        req.body.createdBy = req.user.userId;
+
+        if (req.files && req.files.image) {
+            const postImage = req.files.image;
+            if (!postImage.mimetype.startsWith("image")) {
+                throw new BadRequestError("Please upload an image file");
+            }
+
+            const imagePaths = path.join(__dirname, `../public/uploads/${postImage.name}`);
+
+            // Ensure the directory exists
+            if (!fs.existsSync(path.dirname(imagePaths))) {
+                fs.mkdirSync(path.dirname(imagePaths), { recursive: true });
+            }
+
+            await postImage.mv(imagePaths);
+            req.body.image = postImage.name; // Image path added to the request body
+        }
+
+        const post = await Post.create(req.body);
+        res.status(StatusCodes.CREATED).json({ post });
+    } catch (error) {
+        res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+    }
 };
 
 // Get all posts
@@ -26,22 +50,47 @@ const getPostById = async (req, res) => {
 
 // Update post
 const updatePost = async (req, res) => {
-    const { id } = req.params;
-    const { title, description, url } = req.body;
+    try {
+        const { id } = req.params;
+        const { title, description } = req.body;
 
-    if (title === "" || description === "") {
-        throw new BadRequestError("Title and description fields cannot be empty");
+        if (title === "" || description === "") {
+            throw new BadRequestError("Title and description fields cannot be empty");
+        }
+
+        if (req.files && req.files.image) {
+            const postImage = req.files.image;
+            if (!postImage.mimetype.startsWith("image")) {
+                throw new BadRequestError("Please upload an image file");
+            }
+
+            const imagePaths = path.join(__dirname, `../public/uploads/${postImage.name}`);
+
+            // Ensure the directory exists
+            if (!fs.existsSync(path.dirname(imagePaths))) {
+                fs.mkdirSync(path.dirname(imagePaths), { recursive: true });
+            }
+
+            await postImage.mv(imagePaths);
+            req.body.image = postImage.name; // Image path added to the request body
+        }
+
+        const post = await Post.findOneAndUpdate(
+            { _id: id, createdBy: req.user.userId },
+            req.body,
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
+        if (!post) {
+            throw new NotFoundError(`No post with id : ${id}`);
+        }
+
+        res.status(StatusCodes.OK).json({ post });
+    } catch (error) {
+        res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
     }
-
-    const post = await Post.findOneAndUpdate({ _id: id, createdBy: req.user.userId }, req.body, {
-        new: true,
-        runValidators: true,
-    });
-    if (!post) {
-        throw new NotFoundError(`No post with id : ${id}`);
-    }
-
-    res.status(StatusCodes.OK).json({ post });
 };
 
 // Delete post
@@ -51,7 +100,7 @@ const deletePost = async (req, res) => {
     if (!post) {
         throw new NotFoundError(`No post with id : ${id}`);
     }
-    res.status(StatusCodes.OK).send({ message: "Post deleted successfully"});
+    res.status(StatusCodes.OK).send({ message: "Post deleted successfully" });
 };
 
 module.exports = {

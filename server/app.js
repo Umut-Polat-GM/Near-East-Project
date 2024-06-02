@@ -1,10 +1,14 @@
 require("dotenv").config();
 require("express-async-errors");
+require("express-async-errors");
 
 const cors = require("cors");
 
 const express = require("express");
 const app = express();
+
+// file upload
+const fileUpload = require("express-fileupload");
 
 //connectDB
 const connectDB = require("./db/connect");
@@ -13,7 +17,10 @@ const mainRouter = require("./routes/routes");
 const notFoundMiddleware = require("./middleware/not-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
 
+app.use(express.static('./public'));
+
 app.use(express.json());
+app.use(fileUpload({ useTempFiles: true }));
 app.use(cors());
 
 // app.use("/", (req, res) => {
@@ -35,7 +42,5 @@ const start = async () => {
         console.log(error);
     }
 };
-
-
 
 start();

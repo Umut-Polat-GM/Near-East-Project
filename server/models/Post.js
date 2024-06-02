@@ -5,7 +5,7 @@ const PostSchema = new mongoose.Schema(
         title: {
             type: String,
             // required: [true, "Please provide a title"],
-            minlegth: 3,
+            minlength: 3,
             maxlength: 100,
         },
         description: {
@@ -21,6 +21,16 @@ const PostSchema = new mongoose.Schema(
                 /^(ftp|http|https):\/\/[^ "]+$/,
                 "Please provide a valid URL with http, https or ftp",
             ],
+        },
+        image: {
+            type: String,
+            validate: {
+                validator: function (v) {
+                    // 'image' değeri varsa, regex ile doğrulama yap.
+                    return !v || /\.(jpg|jpeg|png|gif)$/.test(v);
+                },
+                message: "Please provide a valid image with jpg, jpeg, png or gif",
+            },
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
