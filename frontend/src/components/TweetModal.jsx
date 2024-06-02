@@ -125,7 +125,7 @@ const TweetModal = () => {
                 description: updateShema?.description,
                 // image: updateShema?.image,
             });
-            if (updateShema.image) {
+            if (updateShema?.image) {
                 setImagePreview(`http://localhost:3000/uploads/${updateShema.image}`);
             }
         }
