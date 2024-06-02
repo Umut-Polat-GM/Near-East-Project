@@ -14,6 +14,7 @@ import { patchPost, postUserPost } from "../services/Requests";
 import { showNotification } from "../store/notifications/notificationSlice";
 import { fetchPosts } from "../services/fetchFunctions";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 
 const modalStyle = {
     position: "absolute",
@@ -51,11 +52,13 @@ const TweetModal = () => {
     const dispatch = useDispatch();
     const [progress, setProgress] = useState(false);
     const { type, updateShema } = useSelector((state) => state.modal);
+    const [imagePreview, setImagePreview] = useState(null);
     const {
         register,
         handleSubmit,
         reset,
         watch,
+        setValue,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(createNoteSchema),
@@ -122,8 +125,29 @@ const TweetModal = () => {
                 description: updateShema?.description,
                 // image: updateShema?.image,
             });
+            if (updateShema.image) {
+                setImagePreview(`http://localhost:3000/uploads/${updateShema.image}`);
+            }
         }
     }, [type, updateShema, reset]);
+
+    // Watch for changes in the image input and update the preview
+    useEffect(() => {
+        const subscription = watch((value, { name }) => {
+            if (name === "image" && value.image && value.image.length > 0) {
+                const file = value.image[0];
+                setImagePreview(URL.createObjectURL(file));
+            } else {
+                setImagePreview((prev) => prev || null);
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [watch]);
+
+    const handleRemoveImage = () => {
+        setValue("image", null);
+        setImagePreview(null);
+    };
 
     return (
         <Box>
@@ -200,34 +224,61 @@ const TweetModal = () => {
                                             error={!!errors.description}
                                             helperText={errors?.description?.message}
                                         />
-                                        <div className="border-dashed h-20 rounded-lg border-2 border-blue-600 bg-gray-100 flex justify-center items-center my-3">
-                                            <div className="absolute">
-                                                <div className="flex flex-col items-center">
-                                                    <CloudUploadIcon className="w-[100px]  h-[100px] sm:w-[120px]  sm:h-[120px] text-blue-600" />
-                                                    <span className="block text-gray-400 font-normal">
-                                                        {watch("image")?.[0]?.name && (
-                                                            <span className="block text-black font-normal">
-                                                                {watch("image")[0].name}
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                    {errors.image && (
-                                                        <span className="block text-red-500 font-normal">
-                                                            {errors?.image?.message}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
 
-                                            <input
-                                                type="file"
-                                                className="h-full w-full opacity-0"
-                                                name="image"
-                                                accept="image/*"
-                                                id="image"
-                                                {...register("image")}
-                                            />
-                                        </div>
+                                        {imagePreview ? (
+                                            <Box position="relative">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Preview"
+                                                    className="max-h-[400px] w-full object-cover rounded-lg my-3 mx-auto"
+                                                />
+                                                <IconButton
+                                                    aria-label="remove"
+                                                    size="large"
+                                                    color="error"
+                                                    onClick={handleRemoveImage}
+                                                    sx={{
+                                                        position: "absolute",
+                                                        top: 20,
+                                                        right: 10,
+                                                        
+                                                    }}
+                                                >
+                                                    <HighlightOffIcon style={{fontSize:"2rem"}} />
+                                                </IconButton>
+                                            </Box>
+                                        ) : (
+                                            <div className="border-dashed h-20 rounded-lg border-2 border-blue-600 bg-gray-100 flex justify-center items-center my-3">
+                                                <div className="absolute">
+                                                    <div className="flex flex-col items-center">
+                                                        <CloudUploadIcon className="w-[100px]  h-[100px] sm:w-[120px]  sm:h-[120px] text-blue-600" />
+                                                        {updateShema ? (
+                                                            <p className="text-blue-600 text-lg font-semibold">
+                                                                Update Image
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-blue-600 text-lg font-semibold">
+                                                                Upload Image
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="file"
+                                                    className="h-full w-full opacity-0"
+                                                    name="image"
+                                                    accept="image/*"
+                                                    id="image"
+                                                    {...register("image")}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {errors.image && (
+                                            <span className="block text-red-500 font-normal">
+                                                {errors?.image?.message}
+                                            </span>
+                                        )}
                                     </Box>
                                 </Grid>
                             </Grid>
