@@ -233,7 +233,7 @@ const MainSection = () => {
                 </CardActions>
             </Card>
 
-            {posts.map((post) => (
+            {posts?.map((post) => (
                 <PostCard
                     key={post._id}
                     post={post}

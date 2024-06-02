@@ -13,6 +13,7 @@ import { hideModal } from "../store/modal/modalSlice";
 import { patchPost, postUserPost } from "../services/Requests";
 import { showNotification } from "../store/notifications/notificationSlice";
 import { fetchPosts } from "../services/fetchFunctions";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const modalStyle = {
     position: "absolute",
@@ -32,16 +33,18 @@ const modalStyle = {
 const createNoteSchema = yup.object({
     title: yup.string().required("Tweet title is required*"),
     description: yup.string().required("Tweet description is required*"),
-    url: yup
-        .string()
+    image: yup
+        .mixed()
         .notRequired()
-        .test(
-            "is-url-valid",
-            "Invalid URL format",
-            (value) =>
-                !value ||
-                /^(https?:\/\/)?([\w.-]+)+(:\d+)?(\/([\w/_.]*)?)?(\.(jpg|gif|png))?$/.test(value)
-        ),
+        .nullable()
+        .test("fileSize", "File Size is too large", (value) => {
+            if (!value || !value[0]) return true;
+            return value[0].size <= 2000000;
+        })
+        .test("fileType", "Unsupported File Format", (value) => {
+            if (!value || !value[0]) return true;
+            return ["image/jpeg", "image/png", "image/jpg", "image/gif"].includes(value[0].type);
+        }),
 });
 
 const TweetModal = () => {
@@ -52,17 +55,29 @@ const TweetModal = () => {
         register,
         handleSubmit,
         reset,
+        watch,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(createNoteSchema),
     });
 
     const onSubmit = async (data) => {
+        const updateData = {
+            ...updateShema,
+            ...data,
+        };
+
+        // if there is no image, remove the image key from the object
+        if (!data.image || data.image.length === 0) {
+            delete updateData.image;
+            delete data.image;
+        }
+
         try {
             setProgress(true);
             let response;
             if (updateShema) {
-                response = await patchPost({ ...updateShema, ...data });
+                response = await patchPost(updateData);
             } else {
                 response = await postUserPost(data);
             }
@@ -105,7 +120,7 @@ const TweetModal = () => {
             reset({
                 title: updateShema?.title,
                 description: updateShema?.description,
-                url: updateShema?.url,
+                // image: updateShema?.image,
             });
         }
     }, [type, updateShema, reset]);
@@ -133,7 +148,7 @@ const TweetModal = () => {
                                 component="h2"
                                 color={"secondary"}
                             >
-                                {updateShema ? "Tweet Güncelle" : "Tweet Ekle"}
+                                {updateShema ? "Update Tweet" : "Add Tweet"}
                             </Typography>
                             <IconButton
                                 aria-label="exit"
@@ -162,7 +177,7 @@ const TweetModal = () => {
                                             color="secondary"
                                             fullWidth
                                             id="title"
-                                            label="Tweet Başlığı"
+                                            label="Tweet Title"
                                             name="title"
                                             autoComplete="title"
                                             autoFocus
@@ -176,7 +191,7 @@ const TweetModal = () => {
                                             color="secondary"
                                             fullWidth
                                             id="description"
-                                            label="Tweet Açıklaması"
+                                            label="Tweet Description"
                                             name="description"
                                             autoComplete="description"
                                             multiline
@@ -185,19 +200,34 @@ const TweetModal = () => {
                                             error={!!errors.description}
                                             helperText={errors?.description?.message}
                                         />
-                                        <TextField
-                                            margin="dense"
-                                            size="small"
-                                            color="secondary"
-                                            fullWidth
-                                            id="url"
-                                            label="Tweet URL"
-                                            name="url"
-                                            autoComplete="url"
-                                            {...register("url")}
-                                            error={!!errors.url}
-                                            helperText={errors?.url?.message}
-                                        />
+                                        <div className="border-dashed h-20 rounded-lg border-2 border-blue-600 bg-gray-100 flex justify-center items-center my-3">
+                                            <div className="absolute">
+                                                <div className="flex flex-col items-center">
+                                                    <CloudUploadIcon className="w-[100px]  h-[100px] sm:w-[120px]  sm:h-[120px] text-blue-600" />
+                                                    <span className="block text-gray-400 font-normal">
+                                                        {watch("image")?.[0]?.name && (
+                                                            <span className="block text-black font-normal">
+                                                                {watch("image")[0].name}
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                    {errors.image && (
+                                                        <span className="block text-red-500 font-normal">
+                                                            {errors?.image?.message}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <input
+                                                type="file"
+                                                className="h-full w-full opacity-0"
+                                                name="image"
+                                                accept="image/*"
+                                                id="image"
+                                                {...register("image")}
+                                            />
+                                        </div>
                                     </Box>
                                 </Grid>
                             </Grid>

@@ -1,7 +1,11 @@
 function parseJSON(data) {
     const formData = new FormData();
     for (const key in data) {
-        formData.append(key, data[key]);
+        if (key === "image") {
+            formData.append(key, data[key][0]);
+        } else {
+            formData.append(key, data[key]);
+        }
     }
     return formData;
 }

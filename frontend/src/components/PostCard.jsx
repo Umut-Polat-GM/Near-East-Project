@@ -72,15 +72,15 @@ const PostCard = ({ post, onLikePost, onUnLikePost, delSinglePost, timeFormatter
                     title={post?.title}
                     subheader={post.createdAt && timeFormatter(post.createdAt)}
                 />
-                {post?.url && (
+                {post?.image && (
                     <CardMedia
                         component="img"
-                        image={post.url}
-                        alt="Paella dish"
+                        image={`http://localhost:3000/uploads/${post.image}`}
+                        alt={post.image}
                         sx={{
-                            height: 240,
+                            height: 275,
                             objectFit: "cover",
-                            borderRadius: "0.5rem",
+                            padding: "0.5rem",
                         }}
                     />
                 )}

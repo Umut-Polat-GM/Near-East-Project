@@ -21,7 +21,7 @@ import Person2OutlinedIcon from "@mui/icons-material/Person2Outlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { showModal } from "../store/modal/modalSlice";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useState } from "react";
@@ -41,6 +41,8 @@ const ListItems = [
 const ListSection = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const currentUser = useSelector((state) => state.user.user);
+
     const [anchorEl, setAnchorEl] = useState(null);
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -94,8 +96,8 @@ const ListSection = () => {
                 />
 
                 <Box className="flex flex-col justify-center items-start">
-                    <Typography variant="body1">Fatih Keskin</Typography>
-                    <Typography variant="body2">@fatihkeskin</Typography>
+                    <Typography variant="body1">{currentUser?.username}</Typography>
+                    <Typography variant="body2">{currentUser?.email}</Typography>
                 </Box>
 
                 <IconButton onClick={handleClick}>
