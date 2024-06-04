@@ -33,9 +33,15 @@ const createPost = async (req, res) => {
     }
 };
 
+// Get personal posts
+const getPersonalPosts = async (req, res) => {
+    const posts = await Post.find({ createdBy: req.user.userId }).sort("-createdAt");
+    res.status(StatusCodes.OK).json({ posts, count: posts.length });
+};
+
 // Get all posts
 const getAllPosts = async (req, res) => {
-    const posts = await Post.find({ createdBy: req.user.userId }).sort("-createdAt");
+    const posts = await Post.find({}).sort("-createdAt");
     res.status(StatusCodes.OK).json({ posts, count: posts.length });
 };
 
@@ -105,6 +111,7 @@ const deletePost = async (req, res) => {
 
 module.exports = {
     createPost,
+    getPersonalPosts,
     getAllPosts,
     getPostById,
     updatePost,

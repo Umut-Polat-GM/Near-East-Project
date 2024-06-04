@@ -6,6 +6,7 @@ const register = require("../controllers/register");
 
 const {
     createPost,
+    getPersonalPosts,
     getAllPosts,
     getPostById,
     updatePost,
@@ -19,6 +20,7 @@ const authMiddleware = require("../middleware/authentication");
 router.route("/login").post(login);
 router.route("/register").post(register);
 router.route("/posts").get(authMiddleware, getAllPosts).post(authMiddleware, createPost);
+router.route("/my-posts").get(authMiddleware, getPersonalPosts);
 router
     .route("/posts/:id")
     .get(authMiddleware, getPostById)
